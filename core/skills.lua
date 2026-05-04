@@ -1,51 +1,31 @@
--- LifeOS-System: Core de Habilidades
--- Creado por: jsjuhsju
+-- LifeOS-System: Lógica del Cliente
+-- Desarrollado por: jsjuhsju
 
-local MySQL = exports.oxmysql -- Asegúrate de tener oxmysql en tu servidor
+-- Evento para recibir notificaciones de XP desde el servidor
+RegisterNetEvent('LifeOS:client:AddXP', function(skillName, amount)
+    if not skillName or not amount then return end
 
--- Tabla de experiencia necesaria para cada nivel
-local LevelRequirements = {
-    [1] = 0,
-    [2] = 100,
-    [3] = 250,
-    [4] = 600,
-    [5] = 1500
-}
+    -- Notificación visual profesional usando ox_lib
+    exports.ox_lib:notify({
+        title = 'PROGRESO: ' .. skillName:upper(),
+        description = 'Has ganado +' .. amount .. ' puntos de experiencia',
+        type = 'success',
+        position = 'top-right',
+        icon = 'fa-solid fa-up-long',
+        style = {
+            backgroundColor = '#141517',
+            color = '#ffffff'
+        }
+    })
+    
+    -- Sonido de feedback (para que el jugador sepa que ganó algo)
+    PlaySoundFrontend(-1, "PICK_UP", "HUD_FRONTEND_DEFAULT_SOUNDSET", 1)
+end)
 
--- Función para añadir experiencia (XP)
-function AddExperience(source, skill, amount)
-    local xPlayer = exports.qbit_core:GetPlayer(source) -- O tu framework (ESX/QB)
-    local identifier = xPlayer.PlayerData.citizenid
+-- Sincronización del nivel al entrar
+RegisterNetEvent('LifeOS:client:SyncLevel', function(skill, level)
+    print("^2[LifeOS]^7 Sincronizado Nivel " .. level .. " para " .. skill)
+end)
 
-    -- Buscamos el progreso actual en la DB
-    MySQL.scalar('SELECT experience FROM user_skills WHERE identifier = ? AND skill_name = ?', {
-        identifier, skill
-    }, function(currentExp)
-        if currentExp then
-            local newExp = currentExp + amount
-            MySQL.update('UPDATE user_skills SET experience = ? WHERE identifier = ? AND skill_name = ?', {
-                newExp, identifier, skill
-            })
-            print("^2[LifeOS]^7 XP añadida a " .. identifier .. ": " .. amount)
-        else
-            -- Si el jugador no tiene registro de esa habilidad, lo creamos
-            MySQL.insert('INSERT INTO user_skills (identifier, skill_name, experience) VALUES (?, ?, ?)', {
-                identifier, skill, amount
-            })
-        end
-    end)
-end
+print("^2[LifeOS-System]^7 Cliente cargado correctamente.")
 
--- Función para verificar si puede usar un ítem por su nivel
-function CanPlayerUseItem(source, itemName)
-    local itemData = Config.Items[itemName]
-    if not itemData or not itemData.requiredLevel then return true end
-
-    -- Aquí iría la lógica para comparar el nivel del jugador con requiredLevel
-    -- Por ahora lo dejamos en true para que no te bloquee mientras probamos
-    return true 
-end
-
--- Exportamos las funciones para que el script de "Cintura Táctica" u otros las usen
-exports('AddExperience', AddExperience)
-exports('CanPlayerUseItem', CanPlayerUseItem)
