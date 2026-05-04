@@ -1,35 +1,23 @@
--- LifeOS-System: Lógica del Cliente
--- Desarrollado por: jsjuhsju
-
-local isTabletOpen = false
-
--- Función para la animación
-local function PlayTabletAnim()
-    local playerPed = PlayerPedId()
-    RequestAnimDict("amb@code_human_in_car_idles@tablet@base")
-    while not HasAnimDictLoaded("amb@code_human_in_car_idles@tablet@base") do
-        Wait(0)
-    end
-    TaskPlayAnim(playerPed, "amb@code_human_in_car_idles@tablet@base", "static", 8.0, -8.0, -1, 49, 0, false, false, false)
-end
-
-RegisterNetEvent('LifeOS:client:OpenTablet', function(playerSkills)
-    if isTabletOpen then return end
-    
-    isTabletOpen = true
-    PlayTabletAnim() -- El jugador hace la animación de sostener algo
-    SetNuiFocus(true, true)
-    
-    SendNUIMessage({
-        type = "openTablet",
-        skills = playerSkills
-    })
+-- LOGICA DEL ITEM USABLE
+exports.qbit_core:CreateUseableItem('tablet_lifeos', function(source)
+    local src = source
+    exports['LifeOS-System']:GetPlayerSkills(src, function(skills)
+        local data = {
+            agriXP = (skills['agricultura'] and skills['agricultura'].xp or 0),
+            agriLvl = (skills['agricultura'] and skills['agricultura'].lvl or 1),
+            mineXP = (skills['mineria'] and skills['mineria'].xp or 0),
+            mineLvl = (skills['mineria'] and skills['mineria'].lvl or 1),
+            staminaXP = (skills['resistencia'] and skills['resistencia'].xp or 0),
+            staminaLvl = (skills['resistencia'] and skills['resistencia'].lvl or 1),
+            strengthXP = (skills['fuerza'] and skills['fuerza'].xp or 0),
+            strengthLvl = (skills['fuerza'] and skills['fuerza'].lvl or 1)
+        }
+        TriggerClientEvent('LifeOS:client:OpenTablet', src, data)
+    end)
 end)
 
-RegisterNUICallback('closeTablet', function(data, cb)
-    local playerPed = PlayerPedId()
-    isTabletOpen = false
-    SetNuiFocus(false, false)
-    ClearPedTasks(playerPed) -- El jugador deja de hacer la animación
-    cb('ok')
+-- Evento para recibir XP física del cliente
+RegisterNetEvent('LifeOS:server:AddPhysicalXP', function(skill, amount)
+    local src = source
+    exports['LifeOS-System']:AddExperience(src, skill, amount)
 end)

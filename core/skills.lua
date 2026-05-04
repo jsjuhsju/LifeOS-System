@@ -1,67 +1,67 @@
--- LifeOS-System: Core de Habilidades
--- Creado por: jsjuhsju
+-- LifeOS-System: Lógica del Cliente (Física y UI)
+-- Desarrollado por: jsjuhsju
 
-local MySQL = exports.oxmysql 
+local isTabletOpen = false
 
-local LevelRequirements = {
-    [1] = 0,
-    [2] = 100,
-    [3] = 250,
-    [4] = 600,
-    [5] = 1500
-}
-
-local function GetLevelFromXP(xp)
-    local level = 1
-    for lvl, req in ipairs(LevelRequirements) do
-        if xp >= req then level = lvl end
+-- 1. FUNCIÓN PARA LA ANIMACIÓN DE LA TABLETA
+local function PlayTabletAnim()
+    local playerPed = PlayerPedId()
+    RequestAnimDict("amb@code_human_in_car_idles@tablet@base")
+    while not HasAnimDictLoaded("amb@code_human_in_car_idles@tablet@base") do
+        Wait(0)
     end
-    return level
+    TaskPlayAnim(playerPed, "amb@code_human_in_car_idles@tablet@base", "static", 8.0, -8.0, -1, 49, 0, false, false, false)
 end
 
--- Función para añadir experiencia
-function AddExperience(source, skill, amount)
-    local xPlayer = exports.qbit_core:GetPlayer(source) 
-    if not xPlayer then return end
-    local identifier = xPlayer.PlayerData.citizenid
-
-    MySQL.scalar('SELECT experience FROM user_skills WHERE identifier = ? AND skill_name = ?', {
-        identifier, skill
-    }, function(currentExp)
-        if currentExp then
-            local newExp = currentExp + amount
-            local newLevel = GetLevelFromXP(newExp)
-            MySQL.update('UPDATE user_skills SET experience = ?, level = ? WHERE identifier = ? AND skill_name = ?', {
-                newExp, newLevel, identifier, skill
-            })
-            TriggerClientEvent('LifeOS:client:AddXP', source, skill, amount)
-        else
-            MySQL.insert('INSERT INTO user_skills (identifier, skill_name, experience, level) VALUES (?, ?, ?, ?)', {
-                identifier, skill, amount, 1
-            })
-            TriggerClientEvent('LifeOS:client:AddXP', source, skill, amount)
-        end
-    end)
-end
-
--- NUEVA FUNCIÓN: Obtener todas las habilidades para la tableta
-function GetPlayerSkills(source, cb)
-    local xPlayer = exports.qbit_core:GetPlayer(source)
-    if not xPlayer then return cb({}) end
-    local identifier = xPlayer.PlayerData.citizenid
-
-    MySQL.query('SELECT skill_name, experience, level FROM user_skills WHERE identifier = ?', {
-        identifier
-    }, function(results)
-        local skills = {}
-        if results then
-            for _, v in ipairs(results) do
-                skills[v.skill_name] = { xp = v.experience, lvl = v.level }
+-- 2. HILO DE RESISTENCIA Y FUERZA
+CreateThread(function()
+    while true do
+        local ped = PlayerPedId()
+        
+        -- Lógica de Resistencia: Correr, Esprintar o Nadar
+        if IsPedRunning(ped) or IsPedSprinting(ped) or IsPedSwimming(ped) then
+            Wait(20000) -- Gana XP cada 20 segundos
+            TriggerServerEvent('LifeOS:server:AddPhysicalXP', 'resistencia', 2)
+            
+        -- Lógica de Fuerza: Pelear cuerpo a cuerpo
+        elseif IsPedInMeleeCombat(ped) then
+            if IsControlPressed(0, 24) then -- Si está atacando (Click izq / R2)
+                Wait(5000) -- Gana XP cada 5 segundos de combate
+                TriggerServerEvent('LifeOS:server:AddPhysicalXP', 'fuerza', 1)
             end
         end
-        cb(skills)
-    end)
-end
+        Wait(1000)
+    end
+end)
 
-exports('AddExperience', AddExperience)
-exports('GetPlayerSkills', GetPlayerSkills)
+-- 3. EVENTOS DE LA INTERFAZ (NUI)
+RegisterNetEvent('LifeOS:client:OpenTablet', function(playerSkills)
+    if isTabletOpen then return end
+    
+    isTabletOpen = true
+    PlayTabletAnim()
+    SetNuiFocus(true, true)
+    
+    SendNUIMessage({
+        type = "openTablet",
+        skills = playerSkills
+    })
+end)
+
+RegisterNUICallback('closeTablet', function(data, cb)
+    isTabletOpen = false
+    SetNuiFocus(false, false)
+    ClearPedTasks(PlayerPedId())
+    cb('ok')
+end)
+
+-- 4. NOTIFICACIONES DE XP (Solo para trabajos)
+RegisterNetEvent('LifeOS:client:AddXP', function(skillName, amount)
+    exports.ox_lib:notify({
+        title = 'PROGRESO: ' .. skillName:upper(),
+        description = 'Has ganado +' .. amount .. ' de experiencia',
+        type = 'success',
+        position = 'top-right',
+        icon = 'fa-solid fa-person-running'
+    })
+end)
