@@ -1,41 +1,67 @@
--- LifeOS-System: Lógica del Cliente
--- Desarrollado por: jsjuhsju
+-- LifeOS-System: Core de Habilidades
+-- Creado por: jsjuhsju
 
-local isTabletOpen = false
+local MySQL = exports.oxmysql 
 
--- Evento para recibir notificaciones de XP
-RegisterNetEvent('LifeOS:client:AddXP', function(skillName, amount)
-    if not skillName or not amount then return end
+local LevelRequirements = {
+    [1] = 0,
+    [2] = 100,
+    [3] = 250,
+    [4] = 600,
+    [5] = 1500
+}
 
-    exports.ox_lib:notify({
-        title = 'PROGRESO: ' .. skillName:upper(),
-        description = 'Has ganado +' .. amount .. ' puntos de experiencia',
-        type = 'success',
-        position = 'top-right',
-        icon = 'fa-solid fa-up-long'
-    })
-    
-    PlaySoundFrontend(-1, "PICK_UP", "HUD_FRONTEND_DEFAULT_SOUNDSET", 1)
-end)
+local function GetLevelFromXP(xp)
+    local level = 1
+    for lvl, req in ipairs(LevelRequirements) do
+        if xp >= req then level = lvl end
+    end
+    return level
+end
 
--- FUNCIÓN PARA ABRIR LA TABLETA
-RegisterNetEvent('LifeOS:client:OpenTablet', function(playerSkills)
-    if isTabletOpen then return end
-    
-    isTabletOpen = true
-    SetNuiFocus(true, true) -- Activa el ratón y el teclado en la UI
-    
-    SendNUIMessage({
-        type = "openTablet",
-        skills = playerSkills -- Enviamos los niveles a la interfaz
-    })
-end)
+-- Función para añadir experiencia
+function AddExperience(source, skill, amount)
+    local xPlayer = exports.qbit_core:GetPlayer(source) 
+    if not xPlayer then return end
+    local identifier = xPlayer.PlayerData.citizenid
 
--- CALLBACK PARA CERRAR LA TABLETA (Desde el JS)
-RegisterNUICallback('closeTablet', function(data, cb)
-    isTabletOpen = false
-    SetNuiFocus(false, false) -- Devuelve el control al juego
-    cb('ok')
-end)
+    MySQL.scalar('SELECT experience FROM user_skills WHERE identifier = ? AND skill_name = ?', {
+        identifier, skill
+    }, function(currentExp)
+        if currentExp then
+            local newExp = currentExp + amount
+            local newLevel = GetLevelFromXP(newExp)
+            MySQL.update('UPDATE user_skills SET experience = ?, level = ? WHERE identifier = ? AND skill_name = ?', {
+                newExp, newLevel, identifier, skill
+            })
+            TriggerClientEvent('LifeOS:client:AddXP', source, skill, amount)
+        else
+            MySQL.insert('INSERT INTO user_skills (identifier, skill_name, experience, level) VALUES (?, ?, ?, ?)', {
+                identifier, skill, amount, 1
+            })
+            TriggerClientEvent('LifeOS:client:AddXP', source, skill, amount)
+        end
+    end)
+end
 
-print("^2[LifeOS-System]^7 Cliente y Sistema de NUI cargados.")
+-- NUEVA FUNCIÓN: Obtener todas las habilidades para la tableta
+function GetPlayerSkills(source, cb)
+    local xPlayer = exports.qbit_core:GetPlayer(source)
+    if not xPlayer then return cb({}) end
+    local identifier = xPlayer.PlayerData.citizenid
+
+    MySQL.query('SELECT skill_name, experience, level FROM user_skills WHERE identifier = ?', {
+        identifier
+    }, function(results)
+        local skills = {}
+        if results then
+            for _, v in ipairs(results) do
+                skills[v.skill_name] = { xp = v.experience, lvl = v.level }
+            end
+        end
+        cb(skills)
+    end)
+end
+
+exports('AddExperience', AddExperience)
+exports('GetPlayerSkills', GetPlayerSkills)

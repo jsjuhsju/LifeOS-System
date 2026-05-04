@@ -46,3 +46,20 @@ Config.Items = {
 function GetItemConfig(itemName)
     return Config.Items[itemName] or nil
 end
+
+-- ... (Aquí tienes todos tus ítems anteriores)
+
+    ['tu_ultimo_item'] = {
+        label = 'Nombre del ítem',
+        weight = 100,
+    }, -- Asegúrate de que el ítem anterior tenga esta coma
+
+    -- ESTO ES LO QUE TIENES QUE AÑADIR:
+    ['tablet_lifeos'] = {
+        label = 'Tableta LifeOS',
+        description = 'Dispositivo de acceso al sistema operativo personal',
+        weight = 500,
+        canRemove = true,
+        unique = true
+    },
+} -- Esta es la llave que cierra Config.Items

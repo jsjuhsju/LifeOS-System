@@ -1,31 +1,35 @@
-cat <<EOF > server/main.lua
--- LifeOS-System: Inicialización del Servidor
+-- LifeOS-System: Lógica del Cliente
 -- Desarrollado por: jsjuhsju
 
-AddEventHandler('onResourceStart', function(resourceName)
-    if (GetCurrentResourceName() ~= resourceName) then return end
+local isTabletOpen = false
 
-    print("^4==================================================^7")
-    print("^2          LIFEOS-SYSTEM: ACTIVADO               ^7")
-    print("^5             Autor: jsjuhsju                    ^7")
-    print("^4==================================================^7")
+-- Función para la animación
+local function PlayTabletAnim()
+    local playerPed = PlayerPedId()
+    RequestAnimDict("amb@code_human_in_car_idles@tablet@base")
+    while not HasAnimDictLoaded("amb@code_human_in_car_idles@tablet@base") do
+        Wait(0)
+    end
+    TaskPlayAnim(playerPed, "amb@code_human_in_car_idles@tablet@base", "static", 8.0, -8.0, -1, 49, 0, false, false, false)
+end
+
+RegisterNetEvent('LifeOS:client:OpenTablet', function(playerSkills)
+    if isTabletOpen then return end
+    
+    isTabletOpen = true
+    PlayTabletAnim() -- El jugador hace la animación de sostener algo
+    SetNuiFocus(true, true)
+    
+    SendNUIMessage({
+        type = "openTablet",
+        skills = playerSkills
+    })
 end)
 
-RegisterNetEvent('LifeOS:server:PlayerLoaded', function()
-    local src = source
-    TriggerClientEvent('LifeOS:client:SyncLevel', src, 'general', 1)
-    print("^2[LifeOS]^7 Perfil de jugador cargado para ID: " .. src)
+RegisterNUICallback('closeTablet', function(data, cb)
+    local playerPed = PlayerPedId()
+    isTabletOpen = false
+    SetNuiFocus(false, false)
+    ClearPedTasks(playerPed) -- El jugador deja de hacer la animación
+    cb('ok')
 end)
-EOF 
-
--- Comando de prueba para abrir la tableta
-RegisterCommand('ver_tableta', function(source)
-    -- Simulamos unos datos de prueba
-    local dummySkills = {
-        agriXP = 45, 
-        agriLvl = 2,
-        mineXP = 10,
-        mineLvl = 1
-    }
-    TriggerClientEvent('LifeOS:client:OpenTablet', source, dummySkills)
-end, false)
