@@ -1,12 +1,16 @@
--- LifeOS-System: Manifest Oficial
 fx_version 'cerulean'
 game 'gta5'
-
 author 'jsjuhsju'
-description 'Sistema Integral de Vida y Habilidades - LifeOS'
 version '1.0.0'
 
--- Archivos del servidor
+ui_page 'ui/index.html'
+
+files {
+    'ui/index.html',
+    'ui/style.css',
+    'ui/script.js'
+}
+
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
     'configs/items.lua',
@@ -16,15 +20,9 @@ server_scripts {
     'bridge/adaptador.lua'
 }
 
--- Archivos del cliente
 client_scripts {
     'core/skills_cl.lua'
 }
 
-data_file 'SQL' 'sql/database.sql'
-
-exports {
-    'AddExperience',
-    'GetSkillLevel'
 }
 

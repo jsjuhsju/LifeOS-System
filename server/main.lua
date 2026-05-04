@@ -16,4 +16,16 @@ RegisterNetEvent('LifeOS:server:PlayerLoaded', function()
     TriggerClientEvent('LifeOS:client:SyncLevel', src, 'general', 1)
     print("^2[LifeOS]^7 Perfil de jugador cargado para ID: " .. src)
 end)
-EOF
+EOF 
+
+-- Comando de prueba para abrir la tableta
+RegisterCommand('ver_tableta', function(source)
+    -- Simulamos unos datos de prueba
+    local dummySkills = {
+        agriXP = 45, 
+        agriLvl = 2,
+        mineXP = 10,
+        mineLvl = 1
+    }
+    TriggerClientEvent('LifeOS:client:OpenTablet', source, dummySkills)
+end, false)

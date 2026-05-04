@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <title>LifeOS Tablet</title>
+</head>
+<body>
+    <div id="tablet-container" style="display: none;">
+        <div class="tablet-frame">
+            <div class="tablet-screen">
+                <div class="status-bar">
+                    <span id="time">12:00 AM</span>
+                    <div class="status-icons">
+                        <i class="fas fa-wifi"></i>
+                        <i class="fas fa-battery-full"></i>
+                    </div>
+                </div>
+                <div class="app-container">
+                    <header>
+                        <h1>Life<span>OS</span></h1>
+                        <p>Panel de Control Personal</p>
+                    </header>
+                    <div class="stats-grid">
+                        <div class="stat-card">
+                            <i class="fas fa-seedling"></i>
+                            <h3>Agricultura</h3>
+                            <div class="progress-bar"><div id="lvl-agri" style="width: 0%;"></div></div>
+                            <span id="txt-agri">Nivel 1</span>
+                        </div>
+                        <div class="stat-card">
+                            <i class="fas fa-hammer"></i>
+                            <h3>Minería</h3>
+                            <div class="progress-bar"><div id="lvl-mine" style="width: 0%;"></div></div>
+                            <span id="txt-mine">Nivel 1</span>
+                        </div>
+                    </div>
+                    <button class="close-btn" onclick="closeTablet()">Cerrar Sistema</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script src="script.js"></script>
+</body>
+</html>
