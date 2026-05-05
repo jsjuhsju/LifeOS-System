@@ -1,65 +1,15 @@
--- LifeOS-System: Configuración de Ítems
--- Editado por: jsjuhsju
-
+-- Configuración de Economía | Desarrollado por: jsjuhsju
 Config = Config or {}
 
 Config.Items = {
-    -- ÍTEMS DE RECOLECCIÓN (Agricultura)
-    ['maiz'] = {
-        label = 'Maíz fresco',
-        weight = 200,
-        stack = true,
-        close = true,
-        description = 'Maíz recién cosechado del campo.',
-        requiredLevel = 1 -- Nivel mínimo para recolectar
-    },
-    
-    ['pollo_crudo'] = {
-        label = 'Pollo Crudo',
-        weight = 500,
-        stack = true,
-        close = true,
-        description = 'Pollo listo para ser procesado.',
-        requiredLevel = 1
-    },
+    -- Minería
+    ['carbon'] = { label = 'Carbón', skill = 'mineria', req = 1 },
+    ['hierro'] = { label = 'Hierro', skill = 'mineria', req = 5 },
+    ['oro']    = { label = 'Oro', skill = 'mineria', req = 15 },
+    ['diamante'] = { label = 'Diamante', skill = 'mineria', req = 30 },
 
-    -- HERRAMIENTAS
-    ['azada'] = {
-        label = 'Azada de granjero',
-        weight = 1500,
-        stack = false,
-        close = true,
-        description = 'Herramienta esencial para trabajar la tierra.',
-        durability = 100 -- Para que se gaste con el uso
-    },
-
-    -- RECURSOS DE LOGÍSTICA (Servicios)
-    ['factura_luz'] = {
-        label = 'Recibo de Energía',
-        weight = 10,
-        stack = true,
-        description = 'Pendiente de pago en la central eléctrica.',
-    }
+    -- Agricultura
+    ['trigo']  = { label = 'Trigo', skill = 'agricultura', req = 1 },
+    ['tomate'] = { label = 'Tomate', skill = 'agricultura', req = 5 },
+    ['semilla_rara'] = { label = 'Semilla Especial', skill = 'agricultura', req = 20 },
 }
-
--- Función para verificar si el ítem existe (útil para el bridge)
-function GetItemConfig(itemName)
-    return Config.Items[itemName] or nil
-end
-
--- ... (Aquí tienes todos tus ítems anteriores)
-
-    ['tu_ultimo_item'] = {
-        label = 'Nombre del ítem',
-        weight = 100,
-    }, -- Asegúrate de que el ítem anterior tenga esta coma
-
-    -- ESTO ES LO QUE TIENES QUE AÑADIR:
-    ['tablet_lifeos'] = {
-        label = 'Tableta LifeOS',
-        description = 'Dispositivo de acceso al sistema operativo personal',
-        weight = 500,
-        canRemove = true,
-        unique = true
-    },
-} -- Esta es la llave que cierra Config.Items

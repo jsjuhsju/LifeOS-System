@@ -1,21 +1,19 @@
 fx_version 'cerulean'
 game 'gta5'
 
-description 'LifeOS System - Habilidades y Progreso'
 author 'jsjuhsju'
+description 'Pilar Económico LifeOS'
 
-client_scripts {
-    'core/skills_cl.lua'
+shared_scripts {
+    'configs/items.lua'
 }
 
 server_scripts {
     '@oxmysql/lib/MySQL.lua',
-    'core/skills.lua',
-    'server/main.lua'
+    'core/server.lua'
 }
 
 ui_page 'ui/index.html'
-
 files {
     'ui/index.html',
     'ui/style.css',
